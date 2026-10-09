@@ -4,170 +4,175 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AZ MLBB Rankings</title>
-    <!-- Supabase JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent-color: #38bdf8;
-            --text-main: #f8fafc;
-            --text-sub: #94a3b8;
-            --gold: #f59e0b;
+            --bg: #07101c;
+            --panel: #0e1b2d;
+            --line: #263b55;
+            --text: #edf4ff;
+            --muted: #3db1c7;
+            --gold: #f2cd5d;
         }
-
-        body {
-            margin: 0;
-            padding: 16px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-        }
-
-        .header {
-            text-align: center;
-            padding: 20px 0;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            color: var(--accent-color);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .header p {
-            margin: 6px 0 0;
-            font-size: 14px;
-            color: var(--text-sub);
-        }
-
-        .rank-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .player-card {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-        }
-
-        .player-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .rank-number {
-            font-weight: bold;
-            font-size: 18px;
-            width: 28px;
-            text-align: center;
-            color: var(--accent-color);
-        }
-
-        .player-card:nth-child(1) .rank-number { color: var(--gold); font-size: 22px; }
-
-        .avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background-color: #334155;
-            object-fit: cover;
-        }
-
-        .details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .player-name {
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .heroes {
-            font-size: 12px;
-            color: var(--text-sub);
-            margin-top: 2px;
-        }
-
-        .points {
-            font-weight: 700;
-            font-size: 16px;
-            color: var(--gold);
-        }
-
-        .loading, .empty {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-sub);
-        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; padding: 16px; }
+        .wrap { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+        .logo { font-weight: 900; font-size: 20px; color: #38bdf8; }
+        .hero { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+        .hero h1 { margin: 4px 0 8px; font-size: 24px; }
+        .hero p { margin: 0; color: #94a3b8; font-size: 14px; }
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+        .stat b { font-size: 24px; display: block; }
+        .lanes { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+        .lane { background: var(--panel); border: 1px solid var(--line); color: var(--text); padding: 10px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+        .lane.active { border-color: var(--gold); color: var(--gold); }
+        .tools { display: flex; gap: 8px; }
+        input, select { background: var(--panel); border: 1px solid var(--line); color: var(--text); padding: 10px; border-radius: 8px; width: 100%; }
+        .btn { background: #0284c7; color: #fff; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .board { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+        .player-card { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+        .player-card:last-child { border-bottom: none; }
+        .rank { font-weight: bold; width: 30px; color: #38bdf8; }
+        .p-info { display: flex; align-items: center; gap: 12px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #1e293b; object-fit: cover; }
+        .pts { font-weight: bold; color: var(--gold); }
+        .empty { padding: 30px; text-align: center; color: #94a3b8; }
+        details { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+        summary { font-weight: bold; cursor: pointer; color: #38bdf8; }
+        .formgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
     </style>
 </head>
 <body>
+    <div class="wrap">
+        <header>
+            <div class="logo">AZ MLBB</div>
+            <small style="color:#94a3b8;">Azerbaijan Player Rankings</small>
+        </header>
 
-    <div class="header">
-        <h1>AZ MLBB Rankings</h1>
-        <p>Azerbaijan Mobile Legends Player Rankings</p>
-    </div>
+        <section class="hero">
+            <small style="color:#38bdf8; font-weight:bold;">AZƏRBAYCAN MLBB SƏHNƏSİ</small>
+            <h1>Real qiymətləndirmə.</h1>
+            <p>Oyunçu reytinqi şəxsi müşahidə, oyun statistikaları, turnir nailiyyətləri və sabitlik əsasında hesablanır.</p>
+        </section>
 
-    <div class="rank-list" id="rankings-container">
-        <div class="loading">Sıralama yüklenir...</div>
+        <section class="stats">
+            <div class="stat"><b id="pCount">0</b><small>OYUNÇU</small></div>
+            <div class="stat"><b>5</b><small>LANE</small></div>
+        </section>
+
+        <div class="lanes">
+            <button class="lane active" onclick="setLane('EXP', this)">EXP</button>
+            <button class="lane" onclick="setLane('Jungle', this)">JUNGLE</button>
+            <button class="lane" onclick="setLane('Mid', this)">MID</button>
+            <button class="lane" onclick="setLane('Gold', this)">GOLD</button>
+            <button class="lane" onclick="setLane('Roam', this)">ROAM</button>
+        </div>
+
+        <div class="tools">
+            <input type="text" id="search" placeholder="Oyunçu axtar..." oninput="render()">
+        </div>
+
+        <div class="board" id="board">
+            <div class="empty">Yüklənir...</div>
+        </div>
+
+        <details>
+            <summary>► Admin paneli — oyunçu əlavə et</summary>
+            <form id="addForm" onsubmit="addPlayer(event)" class="formgrid">
+                <input type="text" id="pName" placeholder="Oyunçu Adı (Nik)" required>
+                <input type="number" id="pPoints" placeholder="Xal (PTS)" required>
+                <select id="pLane">
+                    <option value="EXP">EXP</option>
+                    <option value="Jungle">Jungle</option>
+                    <option value="Mid">Mid</option>
+                    <option value="Gold">Gold</option>
+                    <option value="Roam">Roam</option>
+                </select>
+                <input type="text" id="pHeroes" placeholder="Əsas Herolar (məs: Fanny, Chou)">
+                <button class="btn" style="grid-column: span 2;">Oyunçunu Bazaya Əlavə Et</button>
+            </form>
+        </details>
     </div>
 
     <script>
-        // Supabase Konfigürasyonu
         const SUPABASE_URL = 'https://xhmemtpmcaqldwodjbna.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_L55TIv9PWvH-aChV3EvNNQ_9Dz1VPbt';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        async function fetchRankings() {
-            const container = document.getElementById('rankings-container');
-            
-            try {
-                const { data: players, error } = await _supabase
-                    .from('players')
-                    .select('*')
-                    .order('points', { ascending: false });
+        let allPlayers = [];
+        let activeLane = 'EXP';
 
-                if (error) throw error;
-
-                if (!players || players.length === 0) {
-                    container.innerHTML = '<div class="empty">Henüz oyuncu eklenmedi.</div>';
-                    return;
-                }
-
-                container.innerHTML = players.map((player, index) => `
-                    <div class="player-card">
-                        <div class="player-info">
-                            <div class="rank-number">#${index + 1}</div>
-                            <img class="avatar" src="${player.avatar_url || 'https://via.placeholder.com/150'}" alt="${player.name}">
-                            <div class="details">
-                                <div class="player-name">${player.name}</div>
-                                <div class="heroes">${player.main_heroes ? player.main_heroes.join(', ') : 'Hero belirtilmedi'}</div>
-                            </div>
-                        </div>
-                        <div class="points">${player.points} PTS</div>
-                    </div>
-                `).join('');
-
-            } catch (err) {
-                console.error('Hata:', err);
-                container.innerHTML = '<div class="empty">Veriler alınırken bir hata oluştu.</div>';
+        async function loadData() {
+            const { data, error } = await _supabase.from('players').select('*').order('points', { ascending: false });
+            if (!error && data) {
+                allPlayers = data;
+                document.getElementById('pCount').innerText = allPlayers.length;
+                render();
             }
         }
 
-        fetchRankings();
+        function setLane(lane, btn) {
+            activeLane = lane;
+            document.querySelectorAll('.lane').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            render();
+        }
+
+        function render() {
+            const search = document.getElementById('search').value.toLowerCase();
+            const board = document.getElementById('board');
+            
+            let filtered = allPlayers.filter(p => 
+                (p.lane === activeLane || !p.lane) && 
+                p.name.toLowerCase().includes(search)
+            );
+
+            if (filtered.length === 0) {
+                board.innerHTML = `<div class="empty">Bu lane üzrə oyunçu yoxdur.</div>`;
+                return;
+            }
+
+            board.innerHTML = filtered.map((p, i) => `
+                <div class="player-card">
+                    <div class="p-info">
+                        <div class="rank">#${i + 1}</div>
+                        <img class="avatar" src="${p.avatar_url || 'https://via.placeholder.com/150'}" alt="">
+                        <div>
+                            <strong>${p.name}</strong>
+                            <div style="font-size:12px; color:#94a3b8;">${p.main_heroes ? p.main_heroes.join(', ') : ''}</div>
+                        </div>
+                    </div>
+                    <div class="pts">${p.points} PTS</div>
+                </div>
+            `).join('');
+        }
+
+        async function addPlayer(e) {
+            e.preventDefault();
+            const name = document.getElementById('pName').value;
+            const points = parseInt(document.getElementById('pPoints').value);
+            const lane = document.getElementById('pLane').value;
+            const heroes = document.getElementById('pHeroes').value.split(',').map(h => h.trim());
+
+            const { error } = await _supabase.from('players').insert([{
+                name: name,
+                points: points,
+                lane: lane,
+                main_heroes: heroes
+            }]);
+
+            if (!error) {
+                alert('Oyunçu bazaya əlavə edildi!');
+                document.getElementById('addForm').reset();
+                loadData();
+            } else {
+                alert('Xəta baş verdi: ' + error.message);
+            }
+        }
+
+        loadData();
     </script>
 </body>
 </html>
